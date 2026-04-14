@@ -1,0 +1,54 @@
+name: Helm CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+env:
+  HELM_CHART_PATH: ./k8s-demo
+  RELEASE_NAME: my-release
+  NAMESPACE: default
+
+jobs:
+  lint-test:
+    name: Lint & Helm Template Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Helm Lint
+        run: helm lint $HELM_CHART_PATH
+
+      - name: Helm Template (dry run)
+        run: helm template $RELEASE_NAME $HELM_CHART_PATH
+
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: lint-test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Setup kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+
+      - name: Helm Upgrade/Install
+        run: |
+          helm upgrade --install $RELEASE_NAME $HELM_CHART_PATH \
+            --namespace $NAMESPACE \
+            --create-namespace \
+            --wait
