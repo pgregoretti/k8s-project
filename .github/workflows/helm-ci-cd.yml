@@ -16,6 +16,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+
+      - name: Verify cluster
+        run: kubectl get nodes
+
       - name: Checkout repo
         uses: actions/checkout@v4
 
