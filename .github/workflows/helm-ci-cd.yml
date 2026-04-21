@@ -52,7 +52,24 @@ jobs:
           helm upgrade --install $RELEASE_NAME $HELM_CHART_PATH \
             --namespace $NAMESPACE \
             --create-namespace \
-            --wait
+            --wait \
+            --timeout 10m
+
+      - name: Debug deployment
+        if: always()
+        run: |
+          kubectl get all -n $NAMESPACE
+          kubectl describe deployment $RELEASE_NAME-k8s-demo -n $NAMESPACE || true
+          kubectl get pods -n $NAMESPACE -o wide
+          kubectl describe pods -n $NAMESPACE || true
+      
+      - name: Pod logs
+        if: always()
+        run: |
+          for pod in $(kubectl get pods -n $NAMESPACE -o name); do
+            echo "===== $pod ====="
+            kubectl logs -n $NAMESPACE ${pod#pod/} --all-containers=true || true
+          done
 
       - name: Verify resources
         run: |
