@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: api-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: pgregoretti/k8s-demo-api:latest
+        image: pgregoretti/k8s-demo-api:v1
         ports:
         - containerPort: 5000
 
